@@ -1,8 +1,6 @@
-# pig-card-game
+# Pig (card game)
 
-Pig is a simple dice game first described in print in John Scarne in 1945. Players take turns to roll a single dice as many times as they wish, adding all roll results to a running total, but losing their gained score for the turn if they roll a 1.
-
-Available at https://pig-card-game.pux.one or https://pux-pig-card-game.herokuapp.com
+Pig is a simple, collecting card game of 20th century American origin suitable for three to thirteen players that is played with a 52-card French-suited pack.
 
 ## Development
 
@@ -42,15 +40,7 @@ Available at https://pig-card-game.pux.one or https://pux-pig-card-game.herokuap
 
 ## ToDos
 
-- [x] Make basic game functions in backend
-- [x] Use Redis to store game state
-- [x] Make front=end game lobby
-- [x] Make front-end game play
-- [x] GitHub build action & Heroku host
-- [x] Redis streams & Websocket
-  - https://redis.io/docs/manual/data-types/streams/
-- [x] Add CORS so people can write their own fron-ends
-- [x] Work on a new game (probably pig (card game))
+- [ ] Use a Redis stream for actions and have a single entity responsible for updating game state
 
 ## Notes
 
