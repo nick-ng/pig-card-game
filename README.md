@@ -23,10 +23,11 @@ Available at https://pig-card-game.pux.one or https://pux-pig-card-game.herokuap
 2. `git clone https://github.com/nick-ng/pig-card-game.git <new-repo> && cd <new-repo>`
 3. Change `pig-card-game` to whatever you want and change my name to your name or something.
 4. `git add . && git commit -m "anything. this will get squashed in the next step"`
-5. `git reset --hard $(git commit-tree FETCH_HEAD^{tree} -m "forked https://github.com/nick-ng/pig-card-game")`
-6. `git remote add origin <url-of-repo-you-made>`
-7. `git push --force`
-8. Change branch permissions etc.
+5. `git reset $(git commit-tree HEAD^{tree} -m "forked https://github.com/nick-ng/pig-card-game")`
+6. `git remote remove origin`
+7. `git remote add origin <url-of-repo-you-made>`
+8. `git push --set-upstream origin main`
+9. Change branch permissions etc.
 
 ## Deploying to Heroku
 
