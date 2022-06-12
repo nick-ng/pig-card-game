@@ -17,6 +17,7 @@ const server = http.createServer(app);
 new GameWebSocketServer(
   {
     server,
+    maxPayload: 51200, // 50 KB
   },
   streamHelper
 );
