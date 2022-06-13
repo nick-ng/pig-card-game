@@ -45,7 +45,7 @@ export default class Game {
       },
       gameSecrets: {},
       gameState: defaultGameState,
-      lastActionId: 0,
+      lastActionId: "0-0",
       ...initial,
     };
 
@@ -62,6 +62,7 @@ export default class Game {
     this.gameSettings = temp.gameSettings;
     this.gameSecrets = temp.gameSecrets;
     this.gameState = temp.gameState;
+    this.lastActionId = temp.lastActionId;
   }
 
   getGameData = () => {
