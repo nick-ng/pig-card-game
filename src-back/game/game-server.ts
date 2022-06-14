@@ -2,6 +2,11 @@ import { streamHelper, client as redisClient } from "./game-redis";
 import Game from "./game-class";
 
 const STATS_REPORT_DELAY_MS = 1000;
+const APM_WEIGHT = 3;
+const FREE_HEAP_WEIGHT = 3;
+export const GAME_STARTER_KEY = "game-starter";
+
+const getStatsKey = (id: string) => `stats:${id}`;
 
 /**
  * - All game servers are listening to a "new-game" stream
@@ -25,44 +30,111 @@ export default class GameServer {
   constructor(id: string) {
     this.id = id;
     this.allGames = [];
-    this.statsKey = `stats:${id}`;
+    this.statsKey = getStatsKey(id);
     this.actionCount = 0;
     this.actionCountLastReset = Date.now();
+
+    this.reportStats();
   }
 
   getActionStats = () => {
-    const currentActionCount = this.actionCount;
-    const currentActionCountLastReset = this.actionCountLastReset;
+    const tempActionCount = this.actionCount;
+    const tempActionCountLastReset = this.actionCountLastReset;
     this.actionCount = 0;
     this.actionCountLastReset = Date.now();
-    const elapsed =
-      this.actionCountLastReset -
-      currentActionCountLastReset +
-      Number.MIN_VALUE;
+    const elapsed = this.actionCountLastReset - tempActionCountLastReset;
 
     return {
-      actionCount: currentActionCount,
+      actionCount: tempActionCount,
       elapsed,
-      actionsPerMinute: (currentActionCount / elapsed) * 1000 * 60,
+      actionsPerMinute:
+        (tempActionCount / (elapsed + Number.MIN_VALUE)) * 1000 * 60,
     };
   };
 
+  handleGameStarts = () => {};
+
   getStats = () => {
+    const memoryUsage = process.memoryUsage();
     return {
-      memoryUsage: process.memoryUsage(),
+      id: this.id,
+      memoryUsage,
+      heapFree: memoryUsage.heapTotal - memoryUsage.heapUsed,
+      games: this.allGames.length,
+      timestamp: Date.now(),
       ...this.getActionStats(),
     };
   };
 
-  // publish your stats to a redis store
   reportStats = async () => {
     // 10. Check if you died?
 
     // 20. Update stats
     redisClient.set(this.statsKey, JSON.stringify(this.getStats()));
+    redisClient.expire(this.statsKey, (STATS_REPORT_DELAY_MS * 10) / 1000);
 
     setTimeout(() => {
       this.reportStats();
-    }, STATS_REPORT_DELAY_MS);
+    }, STATS_REPORT_DELAY_MS - Math.random() * 50);
   };
 }
+
+export const checkStats = async () => {
+  let allStats = [];
+
+  for await (const key of redisClient.scanIterator({
+    TYPE: "string",
+    MATCH: getStatsKey("*"),
+  })) {
+    try {
+      const statsJSONString = await redisClient.get(key);
+      if (typeof statsJSONString === "string") {
+        const stats = JSON.parse(statsJSONString);
+        allStats.push(stats);
+
+        if (
+          !stats.timestamp ||
+          stats.timestamp > Date.now() + 11 * STATS_REPORT_DELAY_MS
+        ) {
+          redisClient.del(key);
+        }
+      }
+    } catch (e) {
+      console.info("error on", key);
+      console.error("Error when checking stats", e);
+    }
+  }
+
+  return allStats;
+};
+
+export const startGame = async (gameId: string) => {
+  try {
+    const serverStats = await checkStats();
+
+    if (serverStats.length === 0) {
+      return false;
+    }
+
+    const serverId = serverStats.sort((a, b) => {
+      const aa =
+        FREE_HEAP_WEIGHT * a.heapFree - APM_WEIGHT * a.actionsPerMinute;
+      const bb =
+        FREE_HEAP_WEIGHT * b.heapFree - APM_WEIGHT * b.actionsPerMinute;
+
+      return aa - bb;
+    })[0].id;
+
+    redisClient.xAdd(GAME_STARTER_KEY, "*", {
+      data: JSON.stringify({
+        gameId,
+        serverId,
+      }),
+    });
+
+    return true;
+  } catch (e) {
+    console.error("Error when starting game", e);
+    return false;
+  }
+};

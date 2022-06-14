@@ -10,6 +10,7 @@ import cors from "cors";
 import gameRouter from "./game/game-router";
 import GameWebSocketServer from "./game/game-websocket";
 import { streamHelper } from "./game/game-redis";
+import { checkStats } from "./game/game-server";
 
 const app = express();
 const server = http.createServer(app);
@@ -25,7 +26,7 @@ new GameWebSocketServer(
 const port = process.env.PORT || 3232;
 app.set("port", port);
 
-if (process.env.NODE_ENV === "dev") {
+if (process.env.NODE_ENV !== "production") {
   app.use((req, _res, next) => {
     console.debug(new Date().toLocaleTimeString(), req.method, req.url);
     next();
@@ -44,12 +45,19 @@ app.use(compression());
 app.use(express.json());
 
 app.use("/api/game", gameRouter);
+app.get("/api/server-stats", async (_req, res) => {
+  try {
+    res.json(await checkStats());
+  } catch (e) {
+    res.sendStatus(500);
+  }
+});
 
 // serve static files
 app.use(express.static(path.resolve(process.cwd(), "dist-front")));
 app.use(express.static(path.resolve(process.cwd(), "static")));
 
-if (process.env.NODE_ENV === "dev") {
+if (process.env.NODE_ENV !== "production") {
   console.info("Dev environment");
   app.use(express.static(path.resolve(process.cwd(), "dev-tools")));
 }

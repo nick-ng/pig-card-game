@@ -67,7 +67,7 @@ export default class StreamHelper {
       StreamHelper.sendMessage(res[0], [newListener]);
     }
 
-    if (process.env.NODE_ENV === "dev") {
+    if (process.env.NODE_ENV !== "production") {
       console.debug(
         new Date().toLocaleTimeString(),
         "stream listeners added. total:",
@@ -79,7 +79,7 @@ export default class StreamHelper {
   removeListener = (id: string): void => {
     this.listeners = this.listeners.filter((a) => a.id !== id);
 
-    if (process.env.NODE_ENV === "dev") {
+    if (process.env.NODE_ENV !== "production") {
       console.debug(
         new Date().toLocaleTimeString(),
         "stream listeners removed. total:",

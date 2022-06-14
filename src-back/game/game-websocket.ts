@@ -189,7 +189,7 @@ export default class GameWebSocketServer {
       );
       this.streamHelper.removeListener(id);
 
-      if (process.env.NODE_ENV === "dev") {
+      if (process.env.NODE_ENV !== "production") {
         console.debug(
           new Date().toLocaleTimeString(),
           "WebSocket disconnected. total:",
@@ -202,7 +202,7 @@ export default class GameWebSocketServer {
       this.startPing();
     }
 
-    if (process.env.NODE_ENV === "dev") {
+    if (process.env.NODE_ENV !== "production") {
       console.debug(
         new Date().toLocaleTimeString(),
         "WebSocket connected. total:",
