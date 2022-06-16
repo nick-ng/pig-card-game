@@ -29,9 +29,10 @@ export default class StreamHelper {
 
   static sendMessage = (
     message: DefaultStreamMessageType,
-    interestedListeners: Listener[]
+    interestedListeners: Listener[],
+    lastMessageId: string
   ) => {
-    let dataObject: { [key: string]: string } | null = null;
+    let dataObject: { [key: string]: any } | null = null;
 
     try {
       dataObject = JSON.parse(message.message.data);
@@ -40,7 +41,7 @@ export default class StreamHelper {
     }
 
     interestedListeners.forEach((listener) =>
-      listener.updateHandler(message.message.data, dataObject)
+      listener.updateHandler(message.message.data, dataObject, lastMessageId)
     );
   };
 
@@ -64,7 +65,7 @@ export default class StreamHelper {
     })) as DefaultStreamMessageType[];
 
     if (res.length > 0) {
-      StreamHelper.sendMessage(res[0], [newListener]);
+      StreamHelper.sendMessage(res[0], [newListener], res[0].id);
     }
 
     if (process.env.NODE_ENV !== "production") {
@@ -132,7 +133,11 @@ export default class StreamHelper {
           (listener) => listener.streamKey === name
         );
 
-        StreamHelper.sendMessage(lastMessage, interestedListeners);
+        StreamHelper.sendMessage(
+          lastMessage,
+          interestedListeners,
+          lastMessage.id
+        );
       });
     }
 

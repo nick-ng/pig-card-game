@@ -1,4 +1,12 @@
-import { streamHelper, client as redisClient } from "./game-redis";
+import { v4 as uuid } from "uuid";
+
+import {
+  streamHelper,
+  client as redisClient,
+  findGame,
+  getRedisKeys as getGameKeys,
+  saveGame,
+} from "./game-redis";
 import Game from "./game-class";
 
 const STATS_REPORT_DELAY_MS = 1000;
@@ -20,12 +28,14 @@ const getStatsKey = (id: string) => `stats:${id}`;
  * - When a game server gets terminated, it performs the above for all games it
  * - When a game server crashes, ?
  */
+
 export default class GameServer {
   id: string;
   allGames: Game[];
   statsKey: string;
   actionCount: number;
   actionCountLastReset: number;
+  averageActionsPerMinute: number;
 
   constructor(id: string) {
     this.id = id;
@@ -33,8 +43,10 @@ export default class GameServer {
     this.statsKey = getStatsKey(id);
     this.actionCount = 0;
     this.actionCountLastReset = Date.now();
+    this.averageActionsPerMinute = 0;
 
     this.reportStats();
+    this.startGames();
   }
 
   getActionStats = () => {
@@ -43,16 +55,69 @@ export default class GameServer {
     this.actionCount = 0;
     this.actionCountLastReset = Date.now();
     const elapsed = this.actionCountLastReset - tempActionCountLastReset;
+    const newAPM = (tempActionCount / (elapsed + Number.MIN_VALUE)) * 1000 * 60;
+
+    const ratio = 2 / 50; // Smoothing / (1 + Periods)
+    this.averageActionsPerMinute =
+      newAPM * ratio + this.averageActionsPerMinute * (1 - ratio);
 
     return {
       actionCount: tempActionCount,
       elapsed,
-      actionsPerMinute:
-        (tempActionCount / (elapsed + Number.MIN_VALUE)) * 1000 * 60,
+      actionsPerMinute: this.averageActionsPerMinute,
     };
   };
 
-  handleGameStarts = () => {};
+  startGames = async () => {
+    const gameStartRequests = await redisClient.xRevRange(
+      GAME_STARTER_KEY,
+      "+",
+      "-"
+    );
+
+    gameStartRequests?.forEach((gameStartRequest) => {
+      this.handleGameStart(gameStartRequest.message.data);
+    });
+  };
+
+  handleGameStart = async (gameStartRequestJSONString: string) => {
+    const gameStartRequestData = JSON.parse(gameStartRequestJSONString);
+    const { gameId, serverId } = gameStartRequestData;
+    console.log("gameId", gameId);
+    if (this.allGames.map((a) => a.id).includes(gameId)) {
+      return;
+    }
+
+    const game = await findGame(gameId);
+
+    if (game !== null) {
+      this.allGames.push(game);
+      streamHelper.addListener({
+        streamKey: getGameKeys(game.id).action,
+        id: uuid(),
+        updateHandler: this.makeActionListener(game),
+      });
+    }
+  };
+
+  makeActionListener =
+    (game: Game) =>
+    (_message: string | null, messageObject: { [key: string]: any } | null) => {
+      if (messageObject === null) {
+        return;
+      }
+      this.actionCount += 1;
+
+      const { playerId, playerPassword, action } = messageObject;
+
+      const result = game.gameAction(playerId, playerPassword, action);
+
+      if (result.type !== "success") {
+        return;
+      }
+
+      saveGame(game.getGameData(), true);
+    };
 
   getStats = () => {
     const memoryUsage = process.memoryUsage();
@@ -75,7 +140,7 @@ export default class GameServer {
 
     setTimeout(() => {
       this.reportStats();
-    }, STATS_REPORT_DELAY_MS - Math.random() * 50);
+    }, STATS_REPORT_DELAY_MS + Math.random() * 50);
   };
 }
 

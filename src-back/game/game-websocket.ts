@@ -10,7 +10,7 @@ import { decodeGameData } from "../../dist-common/decoders/game";
 import { sleep } from "../../dist-common/utils";
 
 import StreamHelper from "../redis/stream-helper";
-import { getRedisKeys } from "./game-redis";
+import { addAction, getRedisKeys } from "./game-redis";
 import Game from "./game-class";
 import { playGame2 } from "./game-service";
 
@@ -212,7 +212,7 @@ export default class GameWebSocketServer {
   };
 
   playGameListener = (data: ActionIncomingMessageObject) => {
-    playGame2(data);
+    addAction(data);
   };
 
   startPing = async () => {

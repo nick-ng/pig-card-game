@@ -26,13 +26,6 @@ new GameWebSocketServer(
 const port = process.env.PORT || 3232;
 app.set("port", port);
 
-if (process.env.NODE_ENV !== "production") {
-  app.use((req, _res, next) => {
-    console.debug(new Date().toLocaleTimeString(), req.method, req.url);
-    next();
-  });
-}
-
 app.use(
   cors({
     origin: "*",
@@ -44,7 +37,6 @@ app.use(
 app.use(compression());
 app.use(express.json());
 
-app.use("/api/game", gameRouter);
 app.get("/api/server-stats", async (_req, res) => {
   try {
     res.json(await checkStats());
@@ -52,6 +44,15 @@ app.get("/api/server-stats", async (_req, res) => {
     res.sendStatus(500);
   }
 });
+
+if (process.env.NODE_ENV !== "production") {
+  app.use((req, _res, next) => {
+    console.debug(new Date().toLocaleTimeString(), req.method, req.url);
+    next();
+  });
+}
+
+app.use("/api/game", gameRouter);
 
 // serve static files
 app.use(express.static(path.resolve(process.cwd(), "dist-front")));
@@ -61,6 +62,10 @@ if (process.env.NODE_ENV !== "production") {
   console.info("Dev environment");
   app.use(express.static(path.resolve(process.cwd(), "dev-tools")));
 }
+
+app.get("/server-stats", (_req, res) => {
+  res.sendFile(path.resolve(process.cwd(), "static", "server-stats.html"));
+});
 
 // redirect all other requests to index.html
 app.use((_req, res) => {

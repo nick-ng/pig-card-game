@@ -8,6 +8,7 @@ export interface Listener {
   id: string;
   updateHandler(
     message: string | null,
-    messageObject: { [key: string]: string } | null
+    messageObject: { [key: string]: any } | null,
+    lastMessageId: string
   ): void;
 }

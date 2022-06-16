@@ -1,6 +1,7 @@
 import { createClient2 } from "../redis";
-import { GameData } from "../../src-common/game-types";
+import { GameData } from "../../dist-common/game-types";
 import { DefaultStreamMessageType } from "../../dist-common/redis-types";
+import { ActionIncomingMessageObject } from "../../dist-common/websocket-message-types";
 import Game from "./game-class";
 import StreamHelper from "../redis/stream-helper";
 
@@ -41,4 +42,12 @@ export const findGame = async (gameId: string) => {
   }
 
   return null;
+};
+
+export const addAction = async (
+  actionMessageObject: ActionIncomingMessageObject
+) => {
+  await client.xAdd(getRedisKeys(actionMessageObject.gameId).action, "*", {
+    data: JSON.stringify(actionMessageObject),
+  });
 };
