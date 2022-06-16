@@ -20,6 +20,7 @@ export default class Game {
   gameSecrets: GameSecrets;
   gameState: GameState;
   lastActionId: string;
+  gameServer: string | null;
 
   constructor(initial: InitObject) {
     if (!initial.host) {
@@ -46,6 +47,7 @@ export default class Game {
       gameSecrets: {},
       gameState: defaultGameState,
       lastActionId: "0-0",
+      gameServer: null,
       ...initial,
     };
 
@@ -63,6 +65,7 @@ export default class Game {
     this.gameSecrets = temp.gameSecrets;
     this.gameState = temp.gameState;
     this.lastActionId = temp.lastActionId;
+    this.gameServer = temp.gameServer;
   }
 
   getGameData = () => {

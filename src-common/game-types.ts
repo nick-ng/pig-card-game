@@ -64,6 +64,8 @@ export interface InitObject {
   gameSettings?: GameSettings;
   gameSecrets?: GameSecrets;
   gameState?: GameState;
+  lastActionId?: string;
+  gameServer?: string;
 }
 
 export interface ActionReturn {
