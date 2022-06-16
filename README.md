@@ -2,6 +2,8 @@
 
 Pig is a simple, collecting card game of 20th century American origin suitable for three to thirteen players that is played with a 52-card French-suited pack.
 
+Forked from [this commit](https://github.com/nick-ng/pig-dice-game/tree/99866e006914ca22554d9b2b5301e39dcfa63d51) of [pig-dice-game](https://github.com/nick-ng/pig-dice-game) (I entered the wrong commit message).
+
 ## Development
 
 1. `npm install`
