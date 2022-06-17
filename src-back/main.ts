@@ -64,7 +64,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 app.get("/server-stats", (_req, res) => {
-  res.sendFile(path.resolve(process.cwd(), "static", "server-stats.html"));
+  res.sendFile(path.resolve(process.cwd(), "other-html", "server-stats.html"));
 });
 
 // redirect all other requests to index.html
