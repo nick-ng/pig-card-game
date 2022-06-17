@@ -1,5 +1,3 @@
-import { v4 as uuid } from "uuid";
-
 import {
   streamHelper,
   client as redisClient,
@@ -45,6 +43,12 @@ export default class GameServer {
     this.actionCountLastReset = Date.now();
     this.averageActionsPerMinute = 0;
 
+    streamHelper.addListener({
+      streamKey: GAME_STARTER_KEY,
+      id: this.id,
+      fetchOnAdd: false,
+      updateHandler: this.gameStartListener,
+    });
     this.reportStats();
     this.startGames();
   }
@@ -82,8 +86,8 @@ export default class GameServer {
 
   handleGameStart = async (gameStartRequestJSONString: string) => {
     const gameStartRequestData = JSON.parse(gameStartRequestJSONString);
-    const { gameId, serverId } = gameStartRequestData;
-    console.log("gameId", gameId);
+    const { gameId } = gameStartRequestData;
+
     if (this.allGames.map((a) => a.id).includes(gameId)) {
       return;
     }
@@ -94,7 +98,8 @@ export default class GameServer {
       this.allGames.push(game);
       streamHelper.addListener({
         streamKey: getGameKeys(game.id).action,
-        id: uuid(),
+        id: game.id,
+        fetchOnAdd: true,
         updateHandler: this.makeActionListener(game),
       });
     }
@@ -119,6 +124,10 @@ export default class GameServer {
       saveGame(game.getGameData(), true);
     };
 
+  gameStartListener = (message: string) => {
+    this.handleGameStart(message);
+  };
+
   getStats = () => {
     const memoryUsage = process.memoryUsage();
     return {
@@ -132,15 +141,12 @@ export default class GameServer {
   };
 
   reportStats = async () => {
-    // 10. Check if you died?
-
-    // 20. Update stats
     redisClient.set(this.statsKey, JSON.stringify(this.getStats()));
     redisClient.expire(this.statsKey, (STATS_REPORT_DELAY_MS * 10) / 1000);
 
     setTimeout(() => {
       this.reportStats();
-    }, STATS_REPORT_DELAY_MS + Math.random() * 50);
+    }, STATS_REPORT_DELAY_MS + Math.random() * 0.1 * STATS_REPORT_DELAY_MS);
   };
 }
 

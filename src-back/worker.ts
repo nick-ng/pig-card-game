@@ -6,4 +6,4 @@ import GameServer from "./game/game-server";
 
 const WORKER_ID = uuid();
 
-const gameServer = new GameServer(WORKER_ID);
+new GameServer(WORKER_ID);

@@ -12,7 +12,6 @@ export const newGame = async (
   game.addPlayer(playerId, playerName, playerPassword);
 
   await saveGame(game.getGameData());
-  await startGame(game.id);
 
   return {
     code: 200,
@@ -74,7 +73,10 @@ export const playGame = async (
     };
   }
 
-  saveGame(game.getGameData(), true);
+  await saveGame(game.getGameData(), true);
+  if (action === "start") {
+    await startGame(game.id);
+  }
 
   return {
     code: 200,

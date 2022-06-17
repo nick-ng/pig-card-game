@@ -180,6 +180,7 @@ export default class GameWebSocketServer {
     this.streamHelper.addListener({
       id,
       streamKey: gameStateKey,
+      fetchOnAdd: true,
       updateHandler: makeUpdateHandler(connection),
     });
 
