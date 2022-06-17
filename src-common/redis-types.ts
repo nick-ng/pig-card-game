@@ -6,8 +6,10 @@ export interface DefaultStreamMessageType {
 export interface Listener {
   streamKey: string;
   id: string;
+  fetchOnAdd: boolean;
   updateHandler(
-    message: string | null,
-    messageObject: { [key: string]: string } | null
+    message: string,
+    messageObject: { [key: string]: any } | null,
+    lastMessageId: string
   ): void;
 }

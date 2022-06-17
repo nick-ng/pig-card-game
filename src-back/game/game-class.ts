@@ -19,6 +19,8 @@ export default class Game {
   gameSettings: GameSettings;
   gameSecrets: GameSecrets;
   gameState: GameState;
+  lastActionId: string;
+  gameServer: string | null;
 
   constructor(initial: InitObject) {
     if (!initial.host) {
@@ -44,6 +46,8 @@ export default class Game {
       },
       gameSecrets: {},
       gameState: defaultGameState,
+      lastActionId: "0-0",
+      gameServer: null,
       ...initial,
     };
 
@@ -60,6 +64,8 @@ export default class Game {
     this.gameSettings = temp.gameSettings;
     this.gameSecrets = temp.gameSecrets;
     this.gameState = temp.gameState;
+    this.lastActionId = temp.lastActionId;
+    this.gameServer = temp.gameServer;
   }
 
   getGameData = () => {
@@ -71,6 +77,7 @@ export default class Game {
       gameSettings: this.gameSettings,
       gameSecrets: this.gameSecrets,
       gameState: this.gameState,
+      lastActionId: this.lastActionId,
     };
   };
 
@@ -89,6 +96,7 @@ export default class Game {
         gameSettings: this.gameSettings,
         gameSecrets: {},
         gameState: this.gameState,
+        lastActionId: this.lastActionId,
       };
     }
 

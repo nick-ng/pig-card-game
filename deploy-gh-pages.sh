@@ -4,10 +4,10 @@ git checkout main
 git pull
 git branch -D gh-pages
 rm -rf ./dist-front/
-API_ORIGIN=https://pux-pig-dice-game.herokuapp.com npm run build-front
+API_ORIGIN=https://pig-card-game.herokuapp.com npm run build-front
 cp ./dist-front/index.html ./dist-front/404.html
 cp ./static/* ./dist-front
-echo pig-dice-game.pux.one > ./dist-front/CNAME
+echo pig-card-game.pux.one > ./dist-front/CNAME
 
 git checkout --orphan gh-pages
 git reset

@@ -4,12 +4,14 @@
   "description": "Pig is a simple, collecting card game of 20th century American origin suitable for three to thirteen players that is played with a 52-card French-suited pack.",
   "main": "./dist-back/main.js",
   "scripts": {
-    "back": "NODE_ENV=dev tsc --build ./src-back/tsconfig.json --watch & NODE_ENV=dev nodemon --config nodemon.back.json ./dist-back/main.js",
-    "front": "NODE_ENV=dev nodemon --config nodemon.front.json ./esbuild.dev.config.js",
-    "start": "rm -rf ./dist-* && npm run back & npm run front",
+    "once-dev-build": "NODE_ENV=development rm -rf ./dist-* && tsc --build ./src-back/tsconfig.json",
+    "dev-back": "NODE_ENV=development tsc --build ./src-back/tsconfig.json --watch & nodemon --config nodemon.main.json ./dist-back/main.js",
+    "dev-front": "NODE_ENV=development nodemon --config nodemon.front.json ./esbuild.dev.config.js",
+    "dev-worker": "NODE_ENV=development nodemon --config nodemon.worker.json ./dist-back/worker.js",
+    "start": "NODE_ENV=development rm -rf ./dist-* && tsc --build ./src-back/tsconfig.json && npm run dev-back & npm run dev-front",
     "serve": "node ./dist-back/main.js",
-    "build-back": "tsc --build ./src-back/tsconfig.json",
-    "build-front": "node esbuild.config.js",
+    "build-back": "NODE_ENV=production tsc --build ./src-back/tsconfig.json",
+    "build-front": "NODE_ENV=production node esbuild.config.js",
     "check-build": "rm -rf ./dist-* && tsc --build ./src-back/tsconfig.check.json && node esbuild.check.config.js",
     "heroku-postbuild": "npm run build-back && npm run build-front",
     "sim-deploy": "rm -rf ./dist-* && npm run heroku-postbuild && npm run serve"
@@ -55,6 +57,7 @@
     "@types/styled-components": "^5.1.25",
     "@types/uuid": "^8.3.4",
     "@types/ws": "^8.5.3",
+    "concurrently": "^7.2.1",
     "nodemon": "^2.0.16"
   }
 }

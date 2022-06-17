@@ -18,7 +18,7 @@ export const useGameSocket = (
   roundTripTime: number;
   sendViaWebSocket(messageObject: WebsocketIncomingMessageObject): void;
 } => {
-  const ranOnceRef = useRef(false);
+  const reOpenWebSocketRef = useRef(false);
   const webSocketRef = useRef<WebSocket | null>(null);
   const getNewWebSocketRef = useRef((_jsonString?: string) => {});
   const [gameData, setGameData] = useState<GameData>();
@@ -36,12 +36,7 @@ export const useGameSocket = (
   );
 
   useEffect(() => {
-    if (ranOnceRef.current) {
-      return;
-    }
-
-    ranOnceRef.current = true;
-
+    reOpenWebSocketRef.current = true;
     getNewWebSocketRef.current = (messageJSONString?: string) => {
       if (!isNewWebSocketNeeded(webSocketRef.current)) {
         return;
@@ -114,17 +109,32 @@ export const useGameSocket = (
       );
 
       webSocketRef.current.addEventListener("close", () => {
-        console.info(
-          new Date().toLocaleTimeString(),
-          "WebSocket connection lost"
-        );
-        getNewWebSocketRef.current();
+        if (reOpenWebSocketRef.current) {
+          console.info(
+            new Date().toLocaleTimeString(),
+            "WebSocket connection lost"
+          );
+          getNewWebSocketRef.current();
+        } else {
+          console.info(
+            new Date().toLocaleTimeString(),
+            "WebSocket connection closed"
+          );
+        }
       });
     };
 
     getNewWebSocketRef.current();
 
-    return () => {};
+    return () => {
+      console.info(
+        new Date().toLocaleTimeString(),
+        "Closing WebSocket connection"
+      );
+      reOpenWebSocketRef.current = false;
+      webSocketRef.current?.close();
+      webSocketRef.current = null;
+    };
   }, []);
 
   return {

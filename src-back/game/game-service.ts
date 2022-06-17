@@ -1,6 +1,7 @@
 import { ActionIncomingMessageObject } from "src-common/websocket-message-types";
 import Game from "./game-class";
 import { saveGame, findGame } from "./game-redis";
+import { startGame } from "./game-server";
 
 export const newGame = async (
   playerId: string,
@@ -10,7 +11,7 @@ export const newGame = async (
   const game = new Game({ host: playerId });
   game.addPlayer(playerId, playerName, playerPassword);
 
-  saveGame(game.getGameData());
+  await saveGame(game.getGameData());
 
   return {
     code: 200,
@@ -72,7 +73,10 @@ export const playGame = async (
     };
   }
 
-  saveGame(game.getGameData(), true);
+  await saveGame(game.getGameData(), true);
+  if (action === "start") {
+    await startGame(game.id);
+  }
 
   return {
     code: 200,
