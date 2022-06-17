@@ -12,7 +12,6 @@ import { sleep } from "../../dist-common/utils";
 import StreamHelper from "../redis/stream-helper";
 import { addAction, getRedisKeys } from "./game-redis";
 import Game from "./game-class";
-import { playGame2 } from "./game-service";
 
 interface WebSocketServerOptionsWithServer extends ServerOptions {
   server: ReturnType<typeof http.createServer>;
@@ -181,6 +180,7 @@ export default class GameWebSocketServer {
       id,
       streamKey: gameStateKey,
       fetchOnAdd: true,
+      lastOnly: true,
       updateHandler: makeUpdateHandler(connection),
     });
 

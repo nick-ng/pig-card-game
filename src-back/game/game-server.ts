@@ -35,10 +35,11 @@ export default class GameServer {
       streamKey: GAME_STARTER_KEY,
       id: this.id,
       fetchOnAdd: false,
+      lastOnly: false,
       updateHandler: this.gameStartListener,
     });
     this.reportStats();
-    this.startGames();
+    this.resumeGames();
   }
 
   getActionStats = () => {
@@ -60,7 +61,7 @@ export default class GameServer {
     };
   };
 
-  startGames = async () => {
+  resumeGames = async () => {
     const gameStartRequests = await redisClient.xRevRange(
       GAME_STARTER_KEY,
       "+",
@@ -88,6 +89,7 @@ export default class GameServer {
         streamKey: getGameKeys(game.id).action,
         id: game.id,
         fetchOnAdd: true,
+        lastOnly: false,
         updateHandler: this.makeActionListener(game),
       });
     }
@@ -95,7 +97,11 @@ export default class GameServer {
 
   makeActionListener =
     (game: Game) =>
-    (_message: string | null, messageObject: { [key: string]: any } | null) => {
+    (
+      _message: string | null,
+      messageObject: { [key: string]: any } | null,
+      lastActionId: string
+    ) => {
       if (messageObject === null) {
         return;
       }
@@ -109,6 +115,7 @@ export default class GameServer {
         return;
       }
 
+      game.lastActionId = lastActionId;
       saveGame(game.getGameData(), true);
     };
 
