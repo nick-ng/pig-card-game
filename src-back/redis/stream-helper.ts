@@ -129,15 +129,23 @@ export default class StreamHelper {
           messages[messages.length - 1];
         this.lastIds[name] = lastMessage.id;
 
-        const interestedListeners = this.listeners.filter(
-          (listener) => listener.streamKey === name
+        const lastOnlyListeners = this.listeners.filter(
+          (listener) => listener.streamKey === name && listener.lastOnly
         );
 
         StreamHelper.sendMessage(
           lastMessage,
-          interestedListeners,
+          lastOnlyListeners,
           lastMessage.id
         );
+
+        const everyListeners = this.listeners.filter(
+          (listener) => listener.streamKey === name && !listener.lastOnly
+        );
+
+        messages.forEach((message) => {
+          StreamHelper.sendMessage(message, everyListeners, message.id);
+        });
       });
     }
 
