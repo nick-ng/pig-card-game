@@ -48,6 +48,9 @@
             Free Heap
           </th>
           <th class="right">
+            % Used Heap
+          </th>
+          <th class="right">
             Seen _ ms Ago
           </th>
         </tr>
@@ -57,7 +60,8 @@
           <td class="left">{{ server.id }}</td>
           <td class="right">{{ server.games }}</td>
           <td class="right">{{ server.actionsPerMinute.toFixed(1) }}</td>
-          <td class="right">{{ server.heapFree }}</td>
+          <td class="right">{{ server.heapFree.toLocaleString() }}</td>
+          <td class="right">{{ (server.memoryUsage.heapUsed / server.memoryUsage.heapTotal) }}%</td>
           <td class="right">{{ Date.now() - server.timestamp }}</td>
         </tr>
       </tbody>
