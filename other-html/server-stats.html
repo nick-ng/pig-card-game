@@ -57,7 +57,7 @@
           <td class="left">{{ server.id }}</td>
           <td class="right">{{ server.games }}</td>
           <td class="right">{{ server.actionsPerMinute.toFixed(1) }}</td>
-          <td class="right">{{ server.heapFree }}</td>
+          <td class="right">{{ server.heapFree.toLocaleString() }}</td>
           <td class="right">{{ Date.now() - server.timestamp }}</td>
         </tr>
       </tbody>
