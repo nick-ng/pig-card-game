@@ -5,8 +5,8 @@ import { ActionIncomingMessageObject } from "../../dist-common/websocket-message
 import Game from "./game-class";
 import StreamHelper from "../redis/stream-helper";
 
-const SHORT_TTL = 60 * 60; // 1 hour in seconds
-const LONG_TTL = 36 * 60 * 60; // 36 hours in seconds
+export const SHORT_TTL = 60 * 60; // 1 hour in seconds
+export const LONG_TTL = 36 * 60 * 60; // 36 hours in seconds
 
 export const getRedisKeys = (gameId: string) => {
   const baseKey = `game:${gameId.replaceAll(/[^a-z0-9\-]/g, "-")}`.slice(0, 45);
@@ -21,14 +21,24 @@ const xReadClient = createClient2("xRead Client");
 
 export const streamHelper = new StreamHelper(client, xReadClient);
 
+const expireGT = async (key: string, ttl: number) => {
+  const existingTtl = await client.ttl(key);
+
+  if (existingTtl < 0 || existingTtl > ttl) {
+    return;
+  }
+
+  return client.expire(key, ttl);
+};
+
 export const saveGame = async (gameData: GameData, useLongTTL?: boolean) => {
   await client.xAdd(getRedisKeys(gameData.id).state, "*", {
     data: JSON.stringify(gameData),
   });
   if (useLongTTL) {
-    await client.expire(getRedisKeys(gameData.id).state, LONG_TTL);
+    expireGT(getRedisKeys(gameData.id).state, LONG_TTL);
   } else {
-    await client.expire(getRedisKeys(gameData.id).state, SHORT_TTL);
+    expireGT(getRedisKeys(gameData.id).state, SHORT_TTL);
   }
 };
 
@@ -50,4 +60,5 @@ export const addAction = async (
   await client.xAdd(getRedisKeys(actionMessageObject.gameId).action, "*", {
     data: JSON.stringify(actionMessageObject),
   });
+  expireGT(getRedisKeys(actionMessageObject.gameId).action, LONG_TTL);
 };

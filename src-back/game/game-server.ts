@@ -4,6 +4,7 @@ import {
   findGame,
   getRedisKeys as getGameKeys,
   saveGame,
+  getRedisKeys,
 } from "./game-redis";
 import Game from "./game-class";
 
@@ -13,19 +14,6 @@ const FREE_HEAP_WEIGHT = 3;
 export const GAME_STARTER_KEY = "game-starter";
 
 const getStatsKey = (id: string) => `stats:${id}`;
-
-/**
- * - All game servers are listening to a "new-game" stream
- * - Each game server puts its ID, the current timestamp and the number of games it's handling on a store somewhere
- * - When a new game is created, the web server checks the number of games each server is handling and chooses the one that has the fewest games
- *   - If there's a tie, one of the tie-breaks is randomly chosen
- * - The web server then adds an event to the "new-game" stream that has the game ID and the game server ID.
- * - The nominated game server then starts handling the game and increases its games handled count
- * - When a game is over, the server stops listening to it.
- *
- * - When a game server gets terminated, it performs the above for all games it
- * - When a game server crashes, ?
- */
 
 export default class GameServer {
   id: string;
@@ -126,6 +114,22 @@ export default class GameServer {
 
   gameStartListener = (message: string) => {
     this.handleGameStart(message);
+
+    const ids = [...streamHelper.listeners]
+      .map((a) => a.id)
+      .filter((a) => a !== this.id);
+
+    ids.forEach(async (id) => {
+      const { state: stateKey, action: actionKey } = getRedisKeys(id);
+      const keyExists = await redisClient.exists(stateKey);
+
+      if (keyExists > 0) {
+        return;
+      }
+
+      redisClient.del(actionKey);
+      streamHelper.removeListener(id);
+    });
   };
 
   getStats = () => {
@@ -196,12 +200,23 @@ export const startGame = async (gameId: string) => {
       return aa - bb;
     })[0].id;
 
-    redisClient.xAdd(GAME_STARTER_KEY, "*", {
-      data: JSON.stringify({
-        gameId,
-        serverId,
-      }),
-    });
+    redisClient.xAdd(
+      GAME_STARTER_KEY,
+      "*",
+      {
+        data: JSON.stringify({
+          gameId,
+          serverId,
+        }),
+      },
+      {
+        TRIM: {
+          strategy: "MAXLEN",
+          strategyModifier: "~",
+          threshold: 10000,
+        },
+      }
+    );
 
     return true;
   } catch (e) {

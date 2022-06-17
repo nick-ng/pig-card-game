@@ -42,7 +42,7 @@ Forked from [this commit](https://github.com/nick-ng/pig-dice-game/tree/99866e00
 
 ## ToDos
 
-- [ ] Use a Redis stream for actions and have a single entity responsible for updating game state
+Check this [GitHub Project](https://github.com/users/nick-ng/projects/1) for details.
 
 ## Notes
 
@@ -113,4 +113,4 @@ Sent to Alice
 
 ### WebSocket API
 
-If you get disconnected, you need to reconnect and re-listen to the game. You'll still be in the game so you don't need to rejoin it..
+If you get disconnected, you need to reconnect and re-listen to the game. You'll still be in the game so you don't need to rejoin it.
