@@ -1,23 +1,25 @@
 import React from "react";
 import styled from "styled-components";
 
-import { PlayerGameData, PlayerDetails } from "../../dist-common/game-types";
+import { PlayerGameData, PlayerDetails } from "../../../dist-common/game-types";
+import { WebsocketIncomingMessageObject } from "../../../dist-common/websocket-message-types";
 
-interface GameOverProps {
+interface PlayingProps {
   gameData: PlayerGameData;
   playerDetails: PlayerDetails;
+  sendViaWebSocket: (messageObject: WebsocketIncomingMessageObject) => void;
 }
 
 const Container = styled.div``;
 
-export default function GameOver({ gameData, playerDetails }: GameOverProps) {
+export default function Playing({ gameData, playerDetails }: PlayingProps) {
   const { gameState, players, gameSettings } = gameData;
 
-  if (gameState.state !== "over") {
+  if (gameState.state !== "main") {
     return <Container>Something went wrong</Container>;
   }
 
-  const { scores } = gameState;
+  const {} = gameState;
   const playerMap = players.reduce((prev: { [key: string]: string }, curr) => {
     prev[curr.id] = curr.name;
     return prev;

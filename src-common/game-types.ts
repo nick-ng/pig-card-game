@@ -61,6 +61,11 @@ export interface GameData {
 
 export type InitObject = Partial<GameData> & { host: string };
 
+export type PlayerGameData = Omit<
+  GameData,
+  "gameSecrets" | "playerSecrets" | "lastActionId" | "gameServer"
+> & { yourSecrets: OnePlayerSecrets };
+
 export interface PlayerDetails {
   playerName: string;
   playerId: string;

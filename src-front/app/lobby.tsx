@@ -1,13 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import QRCode from "react-qr-code";
 
-import { GameData, PlayerDetails } from "../../src-common/game-types";
+import { PlayerGameData, PlayerDetails } from "../../dist-common/game-types";
 
 declare const API_ORIGIN: string;
 
 interface LobbyProps {
-  gameData: GameData;
+  gameData: PlayerGameData;
   playerDetails: PlayerDetails;
 }
 
@@ -27,7 +27,15 @@ const QuiteZone = styled.div`
   display: inline-block;
 `;
 
+const Button = styled.button`
+  &:disabled {
+    cursor: wait;
+  }
+`;
+
 export default function Lobby({ gameData, playerDetails }: LobbyProps) {
+  const [loading, setLoading] = useState(false);
+
   const { players, maxPlayers, host } = gameData;
 
   const canJoinGame =
@@ -44,13 +52,13 @@ export default function Lobby({ gameData, playerDetails }: LobbyProps) {
         </QuiteZone>
       </Details>
       {isHost && (
-        <button
+        <Button
           onClick={() => {
             navigator.clipboard.writeText(location.href);
           }}
         >
           Copy Game Link
-        </button>
+        </Button>
       )}
       <h2>Players In Game</h2>
       <ul>
@@ -59,8 +67,10 @@ export default function Lobby({ gameData, playerDetails }: LobbyProps) {
         ))}
       </ul>
       {canJoinGame && (
-        <button
+        <Button
+          disabled={loading}
           onClick={async () => {
+            setLoading(true);
             await fetch(`${API_ORIGIN}/api/game/${gameData.id}`, {
               method: "POST",
               headers: {
@@ -73,15 +83,18 @@ export default function Lobby({ gameData, playerDetails }: LobbyProps) {
                 playerName: playerDetails.playerName,
               }),
             });
+            setLoading(false);
           }}
         >
           Join Game
-        </button>
+        </Button>
       )}
       {isHost && (
-        <button
+        <Button
+          disabled={loading}
           onClick={async () => {
-            const res = await fetch(`${API_ORIGIN}/api/game/${gameData.id}`, {
+            setLoading(true);
+            await fetch(`${API_ORIGIN}/api/game/${gameData.id}`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json;charset=utf-8",
@@ -92,15 +105,11 @@ export default function Lobby({ gameData, playerDetails }: LobbyProps) {
                 action: "start",
               }),
             });
-
-            const { message, gameData: newGameData } = (await res.json()) as {
-              message: string;
-              gameData: GameData;
-            };
+            setLoading(false);
           }}
         >
           Start Game
-        </button>
+        </Button>
       )}
     </Container>
   );

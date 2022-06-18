@@ -24,7 +24,7 @@ export const streamHelper = new StreamHelper(client, xReadClient);
 const expireGT = async (key: string, ttl: number) => {
   const existingTtl = await client.ttl(key);
 
-  if (existingTtl < 0 || existingTtl > ttl) {
+  if (existingTtl > ttl) {
     return;
   }
 
