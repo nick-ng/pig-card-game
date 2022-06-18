@@ -12,6 +12,8 @@ export const createClient2 = (name: string) => {
   newClient.id = undefined;
 
   newClient.connect();
+  const tic = Date.now();
+
   newClient.on("error", (err) => {
     console.error(`${new Date().toLocaleTimeString()}: ${name} Error`, err);
     if (err.code === "ECONNREFUSED") {
@@ -23,7 +25,7 @@ export const createClient2 = (name: string) => {
     console.info(
       `${new Date().toLocaleTimeString()}: ${name} Connected. ID: ${
         newClient.id
-      }`
+      }. Took ${Date.now() - tic} ms to connect.`
     );
   });
 

@@ -1,5 +1,5 @@
 import http from "http";
-import { v4 as uuid } from "uuid";
+import { randomUUID } from "crypto";
 import { WebSocketServer, ServerOptions, WebSocket as WebSocketType } from "ws";
 
 import {
@@ -160,7 +160,7 @@ export default class GameWebSocketServer {
     data: WebsocketIncomingMessageObject,
     webSocketConnection: WebSocketType
   ) => {
-    const id = uuid();
+    const id = randomUUID();
 
     const connection: Connection = {
       id,

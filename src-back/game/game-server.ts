@@ -7,6 +7,7 @@ import {
   getRedisKeys,
 } from "./game-redis";
 import Game from "./game-class";
+import { sleep } from "../../dist-common/utils";
 
 const STATS_REPORT_DELAY_MS = 1000;
 const APM_WEIGHT = 3;
@@ -31,15 +32,8 @@ export default class GameServer {
     this.actionCountLastReset = Date.now();
     this.averageActionsPerMinute = 0;
 
-    streamHelper.addListener({
-      streamKey: GAME_STARTER_KEY,
-      id: this.id,
-      fetchOnAdd: false,
-      lastOnly: false,
-      updateHandler: this.gameStartListener,
-    });
     this.reportStats();
-    this.resumeGames();
+    this.resumeAndListenForGames();
   }
 
   getActionStats = () => {
@@ -61,15 +55,28 @@ export default class GameServer {
     };
   };
 
-  resumeGames = async () => {
+  resumeAndListenForGames = async () => {
     const gameStartRequests = await redisClient.xRevRange(
       GAME_STARTER_KEY,
       "+",
       "-"
     );
 
+    // Wait for client to connect before blocking with xRead
+    while (typeof streamHelper.xReadClient.id === "undefined") {
+      await sleep(100);
+    }
+
     gameStartRequests?.forEach((gameStartRequest) => {
       this.handleGameStart(gameStartRequest.message.data);
+    });
+
+    streamHelper.addListener({
+      streamKey: GAME_STARTER_KEY,
+      id: this.id,
+      fetchOnAdd: false,
+      lastOnly: false,
+      updateHandler: this.gameStartListener,
     });
   };
 

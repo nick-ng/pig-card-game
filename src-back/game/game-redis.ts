@@ -17,7 +17,7 @@ export const getRedisKeys = (gameId: string) => {
 };
 
 export const client = createClient2("Redis Client");
-const xReadClient = createClient2("xRead Client");
+export const xReadClient = createClient2("xRead Client");
 
 export const streamHelper = new StreamHelper(client, xReadClient);
 

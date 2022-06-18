@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import styled from "styled-components";
-import { v4 as uuid } from "uuid";
 
 import PreLobby from "./pre-lobby";
 import Game from "./game";
@@ -57,12 +56,12 @@ export default function App() {
             };
 
             if (!playerDetails.playerId) {
-              tempDetails.playerId = uuid();
+              tempDetails.playerId = window.crypto.randomUUID();
               localStorage.setItem(PLAYER_ID_STORE, tempDetails.playerId);
             }
 
             if (!playerDetails.playerPassword) {
-              tempDetails.playerPassword = uuid();
+              tempDetails.playerPassword = window.crypto.randomUUID();
               localStorage.setItem(
                 PLAYER_PASSWORD_STORE,
                 tempDetails.playerPassword
@@ -84,7 +83,12 @@ export default function App() {
             }}
           />
           <button>Save</button>
-          <p>Entering a name and click save or pressing enter will generate a unique ID and password which will be stored in your browser's local storage. These are used to identify you when hosting and joining games.</p>
+          <p>
+            Entering a name and click save or pressing enter will generate a
+            unique ID and password which will be stored in your browser's local
+            storage. These are used to identify you when hosting and joining
+            games.
+          </p>
         </Form>
       )}
       {havePlayerCredentials && (

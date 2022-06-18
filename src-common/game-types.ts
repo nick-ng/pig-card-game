@@ -8,35 +8,35 @@ export interface LobbyGameState {
 
 export interface MainGameState {
   state: "main";
-  activePlayer: string;
-  turnOrder: string[];
-  scores: Scores;
-  turnScore: number;
-  lastRoll?: number;
+  seatOrder: string[];
+  chosenCardPlayers: string[];
+  fingerOnNose: string[];
+  cardMap: { [cardId: string]: string };
 }
 
 export interface OverGameState {
   state: "over";
-  turnOrder: string[];
-  scores: Scores;
+  seatOrder: string[];
 }
 
 export type GameState = LobbyGameState | MainGameState | OverGameState;
 
-export interface GameSecret {
+export interface OnePlayerSecrets {
   password: string;
-  [key: string]: string;
+  chosenCard?: string;
+  cardsInHand?: string[];
+}
+
+export interface PlayerSecrets {
+  [key: string]: OnePlayerSecrets;
 }
 
 export interface GameSecrets {
-  [key: string]: GameSecret;
+  fullDeck: string[];
 }
 
 export interface GameSettings {
-  targetScore: number;
-  diceSize: number;
-  diceCount: number;
-  pigNumber: number;
+  cardsPerPlayer: number;
 }
 
 interface Player {
@@ -53,26 +53,13 @@ export interface GameData {
   players: Players;
   gameSettings: GameSettings;
   gameSecrets: GameSecrets;
+  playerSecrets: PlayerSecrets;
   gameState: GameState;
-}
-
-export interface InitObject {
-  id?: string;
-  host: string;
-  maxPlayers?: number;
-  players?: Players;
-  gameSettings?: GameSettings;
-  gameSecrets?: GameSecrets;
-  gameState?: GameState;
   lastActionId?: string;
   gameServer?: string;
 }
 
-export interface ActionReturn {
-  newState: GameState;
-  newSecrets: GameSecrets;
-  message: string;
-}
+export type InitObject = Partial<GameData> & { host: string };
 
 export interface PlayerDetails {
   playerName: string;
