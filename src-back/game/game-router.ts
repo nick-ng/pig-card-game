@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 import { getFullId } from "./game-redis";
-import { newGame, joinGame, getGame, playGame } from "./game-service";
+import { newGame, joinGame, getGame, startGame } from "./game-service";
 
 const router = Router();
 
@@ -88,7 +88,7 @@ router.post("/", async (req, res, _next) => {
 // Game actions - including join
 router.post("/:gameId", async (req, res, _next) => {
   const { gameId } = req.params;
-  const { action, playerName, payload } = req.body;
+  const { action, playerName } = req.body;
   const { "x-player-id": playerId, "x-player-password": playerPassword } =
     req.headers;
 
@@ -125,21 +125,22 @@ router.post("/:gameId", async (req, res, _next) => {
         console.error(e);
         res.sendStatus(500);
       }
-    default:
+    case "start":
       try {
-        const { code, message, gameData } = await playGame(
+        const { code, message, gameData } = await startGame(
           gameId,
           playerId,
-          playerPassword,
-          action,
-          payload
+          playerPassword
         );
 
         res.status(code).json({ message, gameData });
+        return;
       } catch (e) {
         console.error(e);
         res.sendStatus(500);
       }
+    default:
+      res.sendStatus(400);
   }
 });
 

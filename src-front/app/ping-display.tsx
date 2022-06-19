@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import { Link } from "react-router-dom";
 
 const Container = styled.div`
   position: fixed;
@@ -7,9 +8,14 @@ const Container = styled.div`
   right: 0.5em;
   opacity: 0.25;
   transition: all 0.5s;
+  text-align: right;
 
   &:hover {
     opacity: 1;
+  }
+
+  a {
+    color: white;
   }
 `;
 
@@ -18,5 +24,12 @@ export default function PingDisplay({
 }: {
   roundTripTime: number;
 }) {
-  return <Container>Ping: {roundTripTime} ms</Container>;
+  return (
+    <Container>
+      <div>Ping: {roundTripTime} ms</div>
+      <div>
+        <Link to="/">Home</Link>
+      </div>
+    </Container>
+  );
 }

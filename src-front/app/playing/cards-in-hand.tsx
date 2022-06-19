@@ -25,7 +25,7 @@ const Card = styled.button<{
   width: ${(props) => props.cardWidth}vw;
   height: ${(props) => props.cardWidth * 1.4}vw;
   font-size: ${(props) => props.cardWidth * 0.3}vw;
-  background-color: ${(props) => (props.chosen ? "#777777" : "#CCCCCC")};
+  background-color: ${(props) => (props.chosen ? "#777777" : "#dddddd")};
 
   cursor: ${({ showLoadingStyle }) => (showLoadingStyle ? "wait" : "pointer")};
 `;
@@ -41,7 +41,7 @@ export default function CardsInHand({
 
   useEffect(() => {
     setLoading(false);
-  }, [chosenCard]);
+  }, [chosenCard, cardsInHand?.join("-")]);
 
   if (gameState.state !== "main" || !cardsInHand) {
     return <div>Something Went Wrong</div>;
