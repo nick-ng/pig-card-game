@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import styled from "styled-components";
 
+import randomUUID from "src-front/utils/random-uuid";
 import PreLobby from "./pre-lobby";
 import Game from "./game";
 
@@ -38,7 +39,7 @@ export default function App() {
 
   return (
     <Container>
-      <h1>Pig Dice Game</h1>
+      <h1>Pig (Card Game)</h1>
       {playerDetails.playerName ? (
         <p>Hello {playerDetails.playerName}</p>
       ) : (
@@ -56,12 +57,12 @@ export default function App() {
             };
 
             if (!playerDetails.playerId) {
-              tempDetails.playerId = window.crypto.randomUUID();
+              tempDetails.playerId = randomUUID();
               localStorage.setItem(PLAYER_ID_STORE, tempDetails.playerId);
             }
 
             if (!playerDetails.playerPassword) {
-              tempDetails.playerPassword = window.crypto.randomUUID();
+              tempDetails.playerPassword = randomUUID();
               localStorage.setItem(
                 PLAYER_PASSWORD_STORE,
                 tempDetails.playerPassword

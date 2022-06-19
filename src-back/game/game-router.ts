@@ -1,11 +1,12 @@
 import { Router } from "express";
 
+import { getFullId } from "./game-redis";
 import { newGame, joinGame, getGame, playGame } from "./game-service";
 
 const router = Router();
 
 // Get game state
-router.get("/:gameId", async (req, res, _next) => {
+router.get("/:gameId", async (req, res) => {
   const { gameId } = req.params;
   const { "x-player-id": playerId, "x-player-password": playerPassword } =
     req.headers;
@@ -34,6 +35,19 @@ router.get("/:gameId", async (req, res, _next) => {
     console.error(e);
     res.sendStatus(500);
   }
+});
+
+router.get("/short-id/:shortGameId", async (req, res) => {
+  const { shortGameId } = req.params;
+
+  const fullId = await getFullId(shortGameId);
+
+  if (typeof fullId !== "string") {
+    res.sendStatus(404);
+    return;
+  }
+
+  res.send(fullId);
 });
 
 // New game

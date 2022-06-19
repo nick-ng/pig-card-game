@@ -36,7 +36,7 @@ const Button = styled.button`
 export default function Lobby({ gameData, playerDetails }: LobbyProps) {
   const [loading, setLoading] = useState(false);
 
-  const { players, maxPlayers, host } = gameData;
+  const { shortId, players, maxPlayers, host } = gameData;
 
   const canJoinGame =
     !players.map((a) => a.id).includes(playerDetails.playerId) && // Not already in the game
@@ -45,6 +45,7 @@ export default function Lobby({ gameData, playerDetails }: LobbyProps) {
 
   return (
     <Container>
+      <h3>Game ID: {shortId}</h3>
       <Details>
         <summary>QR Code</summary>
         <QuiteZone>

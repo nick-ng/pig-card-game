@@ -11,10 +11,11 @@ import {
   LobbyGameState,
 } from "../../dist-common/game-types";
 import { performAction } from "./game-actions";
-import { InputAction } from "../../dist-common/game-action-types";
+import { GameAction } from "../../dist-common/game-action-types";
 
 export default class Game {
   id: string;
+  shortId: string;
   host: string;
   maxPlayers: number;
   players: Players;
@@ -54,11 +55,8 @@ export default class Game {
       ...initial,
     };
 
-    if (!temp.id) {
-      this.id = randomUUID();
-    } else {
-      this.id = temp.id;
-    }
+    this.id = temp.id;
+    this.shortId = temp.shortId;
 
     this.host = temp.host;
     this.maxPlayers = temp.maxPlayers;
@@ -75,6 +73,7 @@ export default class Game {
   getGameData = (): GameData => {
     return {
       id: this.id,
+      shortId: this.shortId,
       host: this.host,
       maxPlayers: this.maxPlayers,
       players: this.players,
@@ -95,18 +94,19 @@ export default class Game {
     ) {
       return {
         id: this.id,
+        shortId: this.shortId,
         host: this.host,
         maxPlayers: this.maxPlayers,
         players: this.players,
         gameSettings: this.gameSettings,
         yourSecrets: {},
         gameState: this.gameState,
-        lastActionId: this.lastActionId,
       };
     }
 
     return {
       id: this.id,
+      shortId: this.shortId,
       host: this.host,
       maxPlayers: this.maxPlayers,
       players: this.players,
@@ -164,7 +164,7 @@ export default class Game {
   gameAction = (
     playerId: string,
     playerPassword: string,
-    action: InputAction
+    action: GameAction
   ) => {
     if (this.players.filter((a) => a.id === playerId).length === 0) {
       return {
@@ -180,10 +180,14 @@ export default class Game {
       };
     }
 
-    const { message } = performAction(this, {
-      ...action,
-      playerId,
-    });
+    if (action.playerId !== playerId) {
+      return {
+        type: "error",
+        message: "You can't perform an action for someone else.",
+      };
+    }
+
+    const { message } = performAction(this, action);
 
     if (message !== "OK") {
       return {

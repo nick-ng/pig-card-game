@@ -4,6 +4,8 @@ import styled from "styled-components";
 import { PlayerGameData, PlayerDetails } from "../../../dist-common/game-types";
 import { WebsocketIncomingMessageObject } from "../../../dist-common/websocket-message-types";
 
+import CardsInHand from "./cards-in-hand";
+
 interface PlayingProps {
   gameData: PlayerGameData;
   playerDetails: PlayerDetails;
@@ -12,8 +14,13 @@ interface PlayingProps {
 
 const Container = styled.div``;
 
-export default function Playing({ gameData, playerDetails }: PlayingProps) {
-  const { gameState, players, gameSettings } = gameData;
+export default function Playing({
+  gameData,
+  playerDetails,
+  sendViaWebSocket,
+}: PlayingProps) {
+  const { id, shortId, gameState, players, yourSecrets, gameSettings } =
+    gameData;
 
   if (gameState.state !== "main") {
     return <Container>Something went wrong</Container>;
@@ -25,39 +32,30 @@ export default function Playing({ gameData, playerDetails }: PlayingProps) {
     return prev;
   }, {});
 
-  const winnerEntry = Object.entries(scores)
-    .sort((a, b) => b[1] - a[1])
-    .find((a) => a[1] >= gameSettings.targetScore);
-
-  if (!winnerEntry) {
-    return <Container>Something went wrong</Container>;
-  }
-
-  const [winnerId, winnerScore] = winnerEntry;
-
-  let isWinnerYou = winnerId === playerDetails.playerId;
-
   return (
     <Container>
-      {isWinnerYou ? (
-        <h2>You won with {winnerScore} points!</h2>
-      ) : (
-        <p>
-          {playerMap[winnerId]} won with {winnerScore} points.
-        </p>
-      )}
-
-      <div>
-        Scores:
-        <ul>
-          {Object.entries(scores)
-            .sort((a, b) => b[1] - a[1])
-            .map((entry) => {
-              const [id, score] = entry;
-              return <li key={id}>{`${playerMap[id]}: ${score}`}</li>;
-            })}
-        </ul>
-      </div>
+      <p>Game ID: {shortId}</p>
+      <CardsInHand
+        cardWidth={10}
+        gameData={gameData}
+        handleCardChoice={(cardId) => {
+          sendViaWebSocket({
+            type: "action",
+            playerId: playerDetails.playerId,
+            playerPassword: playerDetails.playerPassword,
+            gameId: id,
+            action: {
+              type: "choose-card",
+              playerId: playerDetails.playerId,
+              cardId,
+            },
+          });
+        }}
+      />
+      <h3>playerMap</h3>
+      <pre>{JSON.stringify(playerMap, null, "  ")}</pre>
+      <h3>Full Game Data</h3>
+      <pre>{JSON.stringify(gameData, null, "  ")}</pre>
     </Container>
   );
 }

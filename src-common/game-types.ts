@@ -48,6 +48,7 @@ export type Players = Player[];
 
 export interface GameData {
   id: string;
+  shortId: string;
   host: string;
   maxPlayers: number;
   players: Players;
@@ -59,7 +60,11 @@ export interface GameData {
   gameServer?: string;
 }
 
-export type InitObject = Partial<GameData> & { host: string };
+export type InitObject = Partial<GameData> & {
+  host: string;
+  id: string;
+  shortId: string;
+};
 
 export type PlayerGameData = Omit<
   GameData,

@@ -1,5 +1,8 @@
 import { randomUUID } from "crypto";
-import { GameAction } from "../../dist-common/game-action-types";
+import {
+  GameAction,
+  ChooseCardAction,
+} from "../../dist-common/game-action-types";
 import Game from "./game-class";
 import { shuffle } from "./utils";
 
@@ -9,8 +12,7 @@ const startGame = (
   game: Game,
   action: GameAction
 ): { game: Game; message: string } => {
-  const { gameState, gameSettings, gameSecrets, playerSecrets, players, host } =
-    game;
+  const { gameState, gameSettings, playerSecrets, players, host } = game;
   if (gameState.state !== "lobby") {
     return {
       game,
@@ -71,9 +73,48 @@ const startGame = (
 
 const chooseCard = (
   game: Game,
-  action: GameAction
+  action: ChooseCardAction
 ): { game: Game; message: string } => {
-  const { gameSettings, gameState, gameSecrets } = game;
+  const { gameState, playerSecrets, players } = game;
+  if (gameState.state !== "main") {
+    return {
+      game,
+      message: "You can't do that right now.",
+    };
+  }
+
+  const { playerId, cardId } = action;
+  const { cardsInHand } = playerSecrets[playerId];
+  const { chosenCardPlayers } = gameState;
+
+  if (!cardsInHand?.includes(cardId)) {
+    return {
+      game,
+      message: "You don't have that card.",
+    };
+  }
+
+  if (playerSecrets[playerId].chosenCard === cardId) {
+    return {
+      game,
+      message: "That's already your chosen card.",
+    };
+  }
+
+  playerSecrets[playerId].chosenCard = cardId;
+
+  const uniqueChosenCardPlayers = new Set(chosenCardPlayers);
+  uniqueChosenCardPlayers.add(playerId);
+  gameState.chosenCardPlayers = [...uniqueChosenCardPlayers];
+
+  if (uniqueChosenCardPlayers.size < players.length) {
+    return {
+      game,
+      message: "OK",
+    };
+  }
+
+  // Pass cards
 
   return {
     game,
@@ -94,6 +135,9 @@ const fingerOnNose = (
   };
 };
 
+/**
+ * If performAction gets called, the game has already verified the player's identity
+ */
 export const performAction = (
   game: Game,
   action: GameAction
@@ -102,7 +146,7 @@ export const performAction = (
     case "start":
       return startGame(game, action);
     case "choose-card":
-      return chooseCard(game, action);
+      return chooseCard(game, action as ChooseCardAction);
     case "finger-on-nose":
       return fingerOnNose(game, action);
     default:

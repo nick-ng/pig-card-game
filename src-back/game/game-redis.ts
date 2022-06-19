@@ -2,6 +2,7 @@ import { createClient2 } from "../redis";
 import { GameData } from "../../dist-common/game-types";
 import { DefaultStreamMessageType } from "../../dist-common/redis-types";
 import { ActionIncomingMessageObject } from "../../dist-common/websocket-message-types";
+import { randomString } from "../../dist-common/utils";
 import Game from "./game-class";
 import StreamHelper from "../redis/stream-helper";
 
@@ -29,6 +30,28 @@ const expireGT = async (key: string, ttl: number) => {
   }
 
   return client.expire(key, ttl);
+};
+
+export const getFullId = async (
+  shortGameId: string
+): Promise<string | null> => {
+  return client.get(`short-id:${shortGameId}`);
+};
+
+export const makeShortId = async (fullId: string): Promise<string> => {
+  for (let n = 0; n < 2000; n++) {
+    const characterCount = Math.min(Math.floor(Math.sqrt(n + 1)) + 1, 35);
+    const tempId = randomString(characterCount);
+    const existingKey = await getFullId(tempId);
+
+    if (existingKey === null) {
+      await client.set(`short-id:${tempId}`, fullId);
+      await expireGT(`short-id:${tempId}`, 5 * LONG_TTL);
+      return tempId;
+    }
+  }
+
+  return fullId;
 };
 
 export const saveGame = async (gameData: GameData, useLongTTL?: boolean) => {

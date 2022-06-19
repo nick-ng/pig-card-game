@@ -92,7 +92,6 @@ export const useGameSocket = (
             switch (dataObject.type) {
               case "game-data":
                 if (dataObject.payload.id === gameId) {
-                  console.log("dataObject.payload", dataObject.payload);
                   setGameData(dataObject.payload);
                 }
                 return;
