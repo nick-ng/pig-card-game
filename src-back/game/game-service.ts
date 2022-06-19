@@ -1,5 +1,7 @@
+import { randomUUID } from "crypto";
+
 import Game from "./game-class";
-import { saveGame, findGame } from "./game-redis";
+import { saveGame, findGame, makeShortId } from "./game-redis";
 import { startGame } from "./game-server";
 
 export const newGame = async (
@@ -7,7 +9,10 @@ export const newGame = async (
   playerName: string,
   playerPassword: string
 ) => {
-  const game = new Game({ host: playerId });
+  const gameId = randomUUID();
+  const shortId = await makeShortId(gameId);
+
+  const game = new Game({ host: playerId, id: gameId, shortId });
   game.addPlayer(playerId, playerName, playerPassword);
 
   await saveGame(game.getGameData());
@@ -62,6 +67,7 @@ export const playGame = async (
   const result = game.gameAction(playerId, playerPassword, {
     type: action,
     payload,
+    playerId,
   });
 
   if (result.type !== "success") {

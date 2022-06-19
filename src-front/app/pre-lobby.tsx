@@ -26,6 +26,8 @@ const Form = styled.form`
 
 export default function PreLobby({ playerDetails }: PreLobbyProps) {
   const [tempGameId, setTempGameId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
   return (
@@ -57,9 +59,38 @@ export default function PreLobby({ playerDetails }: PreLobbyProps) {
         Host Game
       </HostGameButton>
       <Form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
-          navigate(`/${tempGameId}`);
+
+          const trimmedId = tempGameId.replaceAll(/[^a-z0-9\-]/g, "");
+          if (trimmedId.length === 36) {
+            navigate(`/${tempGameId}`);
+            return;
+          }
+
+          setLoading(true);
+          try {
+            const res = await fetch(
+              `${API_ORIGIN}/api/game/short-id/${trimmedId}`
+            );
+
+            if (res.status === 404) {
+              setErrorMessage(`Game ${trimmedId} not found.`);
+              setLoading(false);
+              return;
+            }
+
+            const resText = await res.text();
+
+            console.log("resText", resText);
+            navigate(`/${resText}`);
+            setLoading(false);
+          } catch (e) {
+            console.error(
+              `Error when GET from ${API_ORIGIN}/api/game/short-id/${trimmedId}`,
+              e
+            );
+          }
         }}
       >
         <label>Enter a game ID</label>
@@ -70,8 +101,9 @@ export default function PreLobby({ playerDetails }: PreLobbyProps) {
             setTempGameId(e.target.value);
           }}
         />
-        <button>Join Lobby</button>
+        <button disabled={loading}>Join Lobby</button>
       </Form>
+      <p>{errorMessage}</p>
     </Container>
   );
 }

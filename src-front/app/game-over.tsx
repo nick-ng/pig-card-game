@@ -1,10 +1,10 @@
 import React from "react";
 import styled from "styled-components";
 
-import { GameData, PlayerDetails } from "../../src-common/game-types";
+import { PlayerGameData, PlayerDetails } from "../../dist-common/game-types";
 
 interface GameOverProps {
-  gameData: GameData;
+  gameData: PlayerGameData;
   playerDetails: PlayerDetails;
 }
 

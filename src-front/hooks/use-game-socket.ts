@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
 import { WebsocketIncomingMessageObject } from "../../dist-common/websocket-message-types";
-import { GameData, PlayerDetails } from "../../dist-common/game-types";
+import { PlayerGameData, PlayerDetails } from "../../dist-common/game-types";
 
 declare const API_ORIGIN: string;
 const WEBSOCKET_URL = (API_ORIGIN || location.origin).replace(/^http/i, "ws");
@@ -14,14 +14,14 @@ export const useGameSocket = (
   gameId: string,
   playerDetails: PlayerDetails
 ): {
-  gameData: GameData | undefined;
+  gameData: PlayerGameData | undefined;
   roundTripTime: number;
   sendViaWebSocket(messageObject: WebsocketIncomingMessageObject): void;
 } => {
   const reOpenWebSocketRef = useRef(false);
   const webSocketRef = useRef<WebSocket | null>(null);
   const getNewWebSocketRef = useRef((_jsonString?: string) => {});
-  const [gameData, setGameData] = useState<GameData>();
+  const [gameData, setGameData] = useState<PlayerGameData>();
   const [roundTripTime, setRoundTripTime] = useState(0);
 
   const sendViaWebSocketRef = useRef(

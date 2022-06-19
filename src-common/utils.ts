@@ -5,14 +5,14 @@ export const sleep = (ms: number) =>
     }, ms);
   });
 
-export const nextPlayer = (turnOrder: string[], activePlayer: string) => {
-  const nextIndex =
-    turnOrder.findIndex((player) => player === activePlayer) + 1;
-  if (nextIndex >= turnOrder.length) {
-    return turnOrder[0];
+export const randomString = (length: number) => {
+  let string = "";
+  for (let n = 0; n < length; n++) {
+    const randomNumber = Math.floor(36 * Math.random());
+    string = string + randomNumber.toString(36);
   }
 
-  return turnOrder[nextIndex];
+  return string;
 };
 
 export const prevPlayer = (turnOrder: string[], activePlayer: string) => {

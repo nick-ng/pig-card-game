@@ -58,22 +58,15 @@ export default class StreamHelper {
       ]);
     }
 
-    const { streamKey } = newListener;
+    const { fetchOnAdd, streamKey } = newListener;
+    if (fetchOnAdd) {
+      const res = (await this.regularClient.xRevRange(streamKey, "+", "-", {
+        COUNT: 1,
+      })) as DefaultStreamMessageType[];
 
-    const res = (await this.regularClient.xRevRange(streamKey, "+", "-", {
-      COUNT: 1,
-    })) as DefaultStreamMessageType[];
-
-    if (res.length > 0) {
-      StreamHelper.sendMessage(res[0], [newListener], res[0].id);
-    }
-
-    if (process.env.NODE_ENV !== "production") {
-      console.debug(
-        new Date().toLocaleTimeString(),
-        "stream listeners added. total:",
-        this.listeners.length
-      );
+      if (res.length > 0) {
+        StreamHelper.sendMessage(res[0], [newListener], res[0].id);
+      }
     }
   };
 

@@ -50,38 +50,55 @@ Check this [GitHub Project](https://github.com/users/nick-ng/projects/1) for det
 
 On the server
 
-```json
+```jsonc
 {
   "id": "1234-12345-12345-1234",
-  "host": "some-player's-uuid",
-  "maxPlayers": 2,
+  "host": "player-1's-uuid",
+  "maxPlayers": 26,
   "players": [
-    { "id": "some-player's-uuid", "name": "Alice" },
-    { "id": "player-two's-uuid", "name": "Bob" }
+    { "id": "player-1's-uuid", "name": "Alice" },
+    { "id": "player-2's-uuid", "name": "Bob" },
+    { "id": "player-3's-uuid", "name": "Charlie" }
   ],
-  // Things about the game that don't change once it's started.
   "gameSettings": {
-    "gameSetting1": 3,
-    "gameSetting2": "hello"
+    "cardsPerPlayer": 4
   },
-  // Secret information, only available to some players
   "gameSecrets": {
-    "some-player's-uuid": {
-      "password": "asdf", // Used to prevent other players performing actions on your behalf.
-      "secret1": "world"
+    "player-1's-uuid": {
+      "password": "asdf",
+      "chosenCard": "",
+      "cardsInHand": [
+        "card-1's-uuid",
+        "card-4's-uuid",
+        "card-8's-uuid",
+        "card-12's-uuid"
+      ]
     },
-    "player-two's-uuid": {
+    "player-2's-uuid": {
       "password": "bsdf",
-      "secret1": "!"
+      "chosenCard": "card-2's-uuid",
+      "cardsInHand": [
+        "card-2's-uuid",
+        "card-3's-uuid",
+        "card-7's-uuid",
+        "card-11's-uuid"
+      ]
     }
   },
-  // Everything else about the game
+  "gameSecrets": {
+    "fullDeck": ["card-1's-uuid", "card-2's-uuid"]
+  },
   "gameState": {
-    "state": "main", // "lobby", "upkeep", "draw", "main", "combat", etc.
-    "activePlayer": "player-two's-uuid",
-    "turnOrder": ["player-two's-uuid", "some-player's-uuid"],
-    "score": "etc"
-  }
+    "state": "main",
+    "seatOrder": ["player-1's-uuid", "player-3's-uuid", "player-2's-uuid"],
+    "chosenCardPlayers": ["player-2's-uuid"],
+    "cardMap": {
+      "card-1's-uuid": "A",
+      "card-5's-uuid": "B",
+      "card-9's-uuid": "C"
+    }
+  },
+  "lastActionId": "0-0"
 }
 ```
 
@@ -90,23 +107,35 @@ Sent to Alice
 ```json
 {
   "id": "1234-12345-12345-1234",
-  "host": "some-player's-uuid",
-  "maxPlayers": 2,
+  "host": "player-1's-uuid",
+  "maxPlayers": 26,
   "players": [
-    { "id": "some-player's-uuid", "name": "Alice" },
-    { "id": "player-two's-uuid", "name": "Bob" }
+    { "id": "player-1's-uuid", "name": "Alice" },
+    { "id": "player-2's-uuid", "name": "Bob" },
+    { "id": "player-3's-uuid", "name": "Charlie" }
   ],
   "gameSettings": {
-    "gameSetting1": 3,
-    "gameSetting2": "hello"
+    "cardsPerPlayer": 4
   },
-  "gameSecrets": {
+  "yourSecrets": {
     "password": "asdf",
-    "secret1": "world"
+    "chosenCard": "",
+    "cardsInHand": [
+      "card-1's-uuid",
+      "card-4's-uuid",
+      "card-8's-uuid",
+      "card-12's-uuid"
+    ]
   },
   "gameState": {
-    "activePlayer": "player-two's-uuid",
-    "score": "etc"
+    "state": "main",
+    "seatOrder": ["player-1's-uuid", "player-3's-uuid", "player-2's-uuid"],
+    "chosenCardPlayers": ["player-2's-uuid"],
+    "cardMap": {
+      "card-1's-uuid": "A",
+      "card-5's-uuid": "B",
+      "card-9's-uuid": "C"
+    }
   }
 }
 ```

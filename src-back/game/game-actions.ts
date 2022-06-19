@@ -1,161 +1,155 @@
-import { GameData, Scores, ActionReturn } from "../../dist-common/game-types";
-import { GameAction } from "../../dist-common/game-action-types";
-import { nextPlayer } from "../../dist-common/utils";
+import { randomUUID } from "crypto";
+import {
+  GameAction,
+  ChooseCardAction,
+} from "../../dist-common/game-action-types";
+import Game from "./game-class";
+import { shuffle } from "./utils";
 
-const startGame = (gameData: GameData, action: GameAction): ActionReturn => {
-  const { gameState, gameSecrets, players, host } = gameData;
+const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+const startGame = (
+  game: Game,
+  action: GameAction
+): { game: Game; message: string } => {
+  const { gameState, gameSettings, playerSecrets, players, host } = game;
   if (gameState.state !== "lobby") {
     return {
-      newState: gameState,
-      newSecrets: gameSecrets,
+      game,
       message: "Game is already in progress.",
     };
   }
 
   if (action.playerId !== host) {
     return {
-      newState: gameState,
-      newSecrets: gameSecrets,
+      game,
       message: "Only the host can start the game.",
     };
   }
 
-  const turnOrder = players
-    .map((a) => ({ ...a, sortKey: Math.random() }))
-    .sort((a, b) => a.sortKey - b.sortKey)
-    .map((a) => a.id);
+  const playerIds = players.map((a) => a.id);
+  const seatOrder = shuffle(playerIds);
 
-  const scores: Scores = {};
-  turnOrder.forEach((playerId) => {
-    scores[playerId] = 0;
+  const cardMap: { [cardId: string]: string } = {};
+  let deck: string[] = [];
+
+  for (let n = 0; n < players.length; n++) {
+    const letter = LETTERS[n];
+    for (let m = 0; m < gameSettings.cardsPerPlayer; m++) {
+      const cardId = randomUUID();
+      cardMap[cardId] = letter;
+      deck.push(cardId);
+    }
+  }
+
+  const shuffledDeck = shuffle(deck);
+
+  playerIds.forEach((playerId) => {
+    const cardsInHand: string[] = [];
+    for (let n = 0; n < gameSettings.cardsPerPlayer; n++) {
+      cardsInHand.push(shuffledDeck.pop() as string);
+    }
+
+    playerSecrets[playerId].chosenCard = "";
+    playerSecrets[playerId].cardsInHand = cardsInHand;
   });
 
+  game.gameState = {
+    ...game.gameState,
+    state: "main",
+    seatOrder,
+    chosenCardPlayers: [],
+    fingerOnNose: [],
+    cardMap,
+  };
+
+  game.gameSecrets.fullDeck = [...deck];
+
   return {
-    newState: {
-      ...gameState,
-      state: "main",
-      activePlayer: turnOrder[0],
-      turnOrder,
-      scores,
-      turnScore: 0,
-    },
-    newSecrets: gameSecrets,
+    game,
     message: "OK",
   };
 };
 
-const rollDice = (gameData: GameData, action: GameAction): ActionReturn => {
-  const { gameSettings, gameState, gameSecrets } = gameData;
+const chooseCard = (
+  game: Game,
+  action: ChooseCardAction
+): { game: Game; message: string } => {
+  const { gameState, playerSecrets, players } = game;
   if (gameState.state !== "main") {
     return {
-      newState: gameState,
-      newSecrets: gameSecrets,
-      message: "Game not in progress.",
-    };
-  }
-  if (action.playerId !== gameState.activePlayer) {
-    return {
-      newState: gameState,
-      newSecrets: gameSecrets,
-      message: "Not your turn.",
+      game,
+      message: "You can't do that right now.",
     };
   }
 
-  let turnScore = gameState.turnScore;
+  const { playerId, cardId } = action;
+  const { cardsInHand } = playerSecrets[playerId];
+  const { chosenCardPlayers } = gameState;
 
-  const { diceSize, diceCount, pigNumber } = gameSettings;
-
-  let roll = 0;
-
-  for (let n = 0; n < diceCount; n++) {
-    roll += Math.floor(Math.random() * diceSize) + 1;
+  if (!cardsInHand?.includes(cardId)) {
+    return {
+      game,
+      message: "You don't have that card.",
+    };
   }
 
-  if (roll === pigNumber) {
+  if (playerSecrets[playerId].chosenCard === cardId) {
     return {
-      newState: {
-        ...gameState,
-        activePlayer: nextPlayer(gameState.turnOrder, gameState.activePlayer),
-        turnScore: 0,
-        lastRoll: roll,
-      },
-      newSecrets: gameSecrets,
+      game,
+      message: "That's already your chosen card.",
+    };
+  }
+
+  playerSecrets[playerId].chosenCard = cardId;
+
+  const uniqueChosenCardPlayers = new Set(chosenCardPlayers);
+  uniqueChosenCardPlayers.add(playerId);
+  gameState.chosenCardPlayers = [...uniqueChosenCardPlayers];
+
+  if (uniqueChosenCardPlayers.size < players.length) {
+    return {
+      game,
       message: "OK",
     };
   }
 
-  turnScore += roll;
+  // Pass cards
 
   return {
-    newState: { ...gameState, turnScore, lastRoll: roll },
-    newSecrets: gameData.gameSecrets,
+    game,
     message: "OK",
   };
 };
 
-const bankPoints = (gameData: GameData, action: GameAction): ActionReturn => {
-  const { gameSettings, gameState, gameSecrets } = gameData;
-  if (gameState.state !== "main") {
-    return {
-      newState: gameState,
-      newSecrets: gameSecrets,
-      message: "Game not in progress.",
-    };
-  }
-  if (action.playerId !== gameState.activePlayer) {
-    return {
-      newState: gameState,
-      newSecrets: gameSecrets,
-      message: "Not your turn.",
-    };
-  }
-
-  const { playerId } = action;
-
-  const { scores, turnScore, turnOrder, activePlayer } = gameState;
-
-  scores[playerId] += turnScore;
-
-  if (scores[playerId] >= gameSettings.targetScore) {
-    return {
-      newState: {
-        ...gameState,
-        scores,
-        state: "over",
-      },
-      newSecrets: gameSecrets,
-      message: "OK",
-    };
-  }
-
-  return {
-    newState: {
-      ...gameState,
-      scores,
-      turnScore: 0,
-      activePlayer: nextPlayer(turnOrder, activePlayer),
-    },
-    newSecrets: gameSecrets,
-    message: "OK",
-  };
-};
-
-export const performAction = (
-  gameData: GameData,
+const fingerOnNose = (
+  game: Game,
   action: GameAction
-): ActionReturn => {
+): { game: Game; message: string } => {
+  const { gameSettings, gameState, gameSecrets } = game;
+
+  return {
+    game,
+
+    message: "OK",
+  };
+};
+
+/**
+ * If performAction gets called, the game has already verified the player's identity
+ */
+export const performAction = (
+  game: Game,
+  action: GameAction
+): { game: Game; message: string } => {
   switch (action.type) {
     case "start":
-      return startGame(gameData, action);
-    case "roll":
-      return rollDice(gameData, action);
-    case "bank":
-      return bankPoints(gameData, action);
+      return startGame(game, action);
+    case "choose-card":
+      return chooseCard(game, action as ChooseCardAction);
+    case "finger-on-nose":
+      return fingerOnNose(game, action);
     default:
-      return {
-        newState: gameData.gameState,
-        newSecrets: gameData.gameSecrets,
-        message: "No action",
-      };
+      return { game, message: "OK" };
   }
 };
