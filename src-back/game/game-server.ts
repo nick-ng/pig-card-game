@@ -90,7 +90,7 @@ export default class GameServer {
 
     const game = await findGame(gameId);
 
-    if (game !== null) {
+    if (game !== null && game.gameState.state !== "over") {
       this.allGames.push(game);
       streamHelper.addListener({
         streamKey: getGameKeys(game.id).action,
@@ -124,6 +124,11 @@ export default class GameServer {
 
       game.lastActionId = lastActionId;
       saveGame(game.getGameData(), true);
+
+      if (game.gameState.state === "over") {
+        streamHelper.removeListener(game.id);
+        this.allGames = this.allGames.filter((gameB) => gameB.id !== game.id);
+      }
     };
 
   gameStartListener = (message: string) => {
