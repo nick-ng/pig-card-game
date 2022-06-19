@@ -1,8 +1,10 @@
 import { randomUUID } from "crypto";
 
+import { GameAction } from "../../dist-common/game-action-types";
+
 import Game from "./game-class";
 import { saveGame, findGame, makeShortId } from "./game-redis";
-import { startGame } from "./game-server";
+import { sendStartGameAction } from "./game-server";
 
 export const newGame = async (
   playerId: string,
@@ -51,12 +53,10 @@ export const joinGame = async (
   };
 };
 
-export const playGame = async (
+export const startGame = async (
   gameId: string,
   playerId: string,
-  playerPassword: string,
-  action: string,
-  payload: any
+  playerPassword: string
 ) => {
   const game = await findGame(gameId);
 
@@ -65,8 +65,7 @@ export const playGame = async (
   }
 
   const result = game.gameAction(playerId, playerPassword, {
-    type: action,
-    payload,
+    type: "start",
     playerId,
   });
 
@@ -79,9 +78,7 @@ export const playGame = async (
   }
 
   await saveGame(game.getGameData(), true);
-  if (action === "start") {
-    await startGame(game.id);
-  }
+  await sendStartGameAction(game.id);
 
   return {
     code: 200,

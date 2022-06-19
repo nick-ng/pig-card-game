@@ -12,50 +12,27 @@ const Container = styled.div``;
 
 export default function GameOver({ gameData, playerDetails }: GameOverProps) {
   const { gameState, players, gameSettings } = gameData;
+  const { playerId } = playerDetails;
 
   if (gameState.state !== "over") {
     return <Container>Something went wrong</Container>;
   }
 
-  const { scores } = gameState;
-  const playerMap = players.reduce((prev: { [key: string]: string }, curr) => {
-    prev[curr.id] = curr.name;
-    return prev;
-  }, {});
+  const { fingerOnNose } = gameState;
 
-  const winnerEntry = Object.entries(scores)
-    .sort((a, b) => b[1] - a[1])
-    .find((a) => a[1] >= gameSettings.targetScore);
+  const losers = players.filter((player) => !fingerOnNose.includes(player.id));
 
-  if (!winnerEntry) {
+  if (losers.length !== 1) {
     return <Container>Something went wrong</Container>;
   }
 
-  const [winnerId, winnerScore] = winnerEntry;
+  const loser = losers[0];
 
-  let isWinnerYou = winnerId === playerDetails.playerId;
+  const loserIsYou = loser.id === playerId;
 
   return (
     <Container>
-      {isWinnerYou ? (
-        <h2>You won with {winnerScore} points!</h2>
-      ) : (
-        <p>
-          {playerMap[winnerId]} won with {winnerScore} points.
-        </p>
-      )}
-
-      <div>
-        Scores:
-        <ul>
-          {Object.entries(scores)
-            .sort((a, b) => b[1] - a[1])
-            .map((entry) => {
-              const [id, score] = entry;
-              return <li key={id}>{`${playerMap[id]}: ${score}`}</li>;
-            })}
-        </ul>
-      </div>
+      <h2>{loserIsYou ? "You have lost." : `${loser.name} has lost.`}</h2>
     </Container>
   );
 }

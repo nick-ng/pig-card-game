@@ -14,10 +14,9 @@ export interface MainGameState {
   cardMap: { [cardId: string]: string };
 }
 
-export interface OverGameState {
+export type OverGameState = Omit<MainGameState, "state"> & {
   state: "over";
-  seatOrder: string[];
-}
+};
 
 export type GameState = LobbyGameState | MainGameState | OverGameState;
 

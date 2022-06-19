@@ -1,7 +1,6 @@
 interface BasicAction {
   playerId: string;
   type: string;
-  payload?: any;
 }
 
 export interface StartAction extends BasicAction {
@@ -13,8 +12,8 @@ export interface ChooseCardAction extends BasicAction {
   cardId: string;
 }
 
-export interface BankAction extends BasicAction {
-  type: "bank";
+export interface FingerOnNoseAction extends BasicAction {
+  type: "finger-on-nose";
 }
 
-export type GameAction = BasicAction | StartAction | ChooseCardAction;
+export type GameAction = StartAction | ChooseCardAction | FingerOnNoseAction;

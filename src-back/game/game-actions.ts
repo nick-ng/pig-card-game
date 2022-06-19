@@ -2,7 +2,9 @@ import { randomUUID } from "crypto";
 import {
   GameAction,
   ChooseCardAction,
+  FingerOnNoseAction,
 } from "../../dist-common/game-action-types";
+import { PlayerSecrets } from "../../dist-common/game-types";
 import Game from "./game-class";
 import { shuffle } from "./utils";
 
@@ -85,7 +87,7 @@ const chooseCard = (
 
   const { playerId, cardId } = action;
   const { cardsInHand } = playerSecrets[playerId];
-  const { chosenCardPlayers } = gameState;
+  const { chosenCardPlayers, seatOrder } = gameState;
 
   if (!cardsInHand?.includes(cardId)) {
     return {
@@ -114,7 +116,21 @@ const chooseCard = (
     };
   }
 
-  // Pass cards
+  gameState.chosenCardPlayers = [];
+
+  for (let n = 0; n < seatOrder.length; n++) {
+    const giverId = seatOrder[n];
+    const receiverIndex = (n + 1) % seatOrder.length;
+    const receiverId = seatOrder[receiverIndex] as keyof PlayerSecrets;
+
+    const passedCard = playerSecrets[giverId].chosenCard;
+    playerSecrets[giverId].chosenCard = "";
+    playerSecrets[giverId].cardsInHand = playerSecrets[
+      giverId
+    ].cardsInHand?.filter((cardId) => cardId !== passedCard);
+
+    playerSecrets[receiverId].cardsInHand?.push(passedCard!);
+  }
 
   return {
     game,
@@ -124,13 +140,68 @@ const chooseCard = (
 
 const fingerOnNose = (
   game: Game,
-  action: GameAction
+  action: FingerOnNoseAction
 ): { game: Game; message: string } => {
-  const { gameSettings, gameState, gameSecrets } = game;
+  const { gameState, playerSecrets, players } = game;
+  if (gameState.state !== "main") {
+    return {
+      game,
+      message: "You can't do that right now.",
+    };
+  }
+
+  const { playerId } = action;
+  const { cardMap, fingerOnNose } = gameState;
+  const { cardsInHand } = playerSecrets[playerId];
+
+  if (fingerOnNose.length === players.length - 1) {
+    game.gameState = {
+      ...gameState,
+      state: "over",
+    };
+
+    return {
+      game,
+      message: "OK",
+    };
+  }
+
+  if (!Array.isArray(cardsInHand)) {
+    return {
+      game,
+      message: "You don't have cards somehow.",
+    };
+  }
+
+  const [firstCard, ...otherCards] = cardsInHand.map(
+    (cardId) => cardMap[cardId]
+  );
+
+  if (
+    fingerOnNose.length === 0 &&
+    !otherCards.every((cardValue) => cardValue === firstCard)
+  ) {
+    return {
+      game,
+      message: "You can't do that right now.",
+    };
+  }
+
+  fingerOnNose.push(playerId);
+  playerSecrets[playerId].chosenCard = "";
+  gameState.chosenCardPlayers = gameState.chosenCardPlayers.filter(
+    (a) => a !== playerId
+  );
+
+  if (fingerOnNose.length === players.length - 1) {
+    game.gameState = {
+      ...gameState,
+      state: "over",
+    };
+  }
 
   return {
     game,
-
     message: "OK",
   };
 };
@@ -146,7 +217,7 @@ export const performAction = (
     case "start":
       return startGame(game, action);
     case "choose-card":
-      return chooseCard(game, action as ChooseCardAction);
+      return chooseCard(game, action);
     case "finger-on-nose":
       return fingerOnNose(game, action);
     default:

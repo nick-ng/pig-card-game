@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { PlayerGameData, PlayerDetails } from "../../../dist-common/game-types";
 import { WebsocketIncomingMessageObject } from "../../../dist-common/websocket-message-types";
 
+import PlayersDisplay from "./players-display";
 import CardsInHand from "./cards-in-hand";
 
 interface PlayingProps {
@@ -12,31 +13,42 @@ interface PlayingProps {
   sendViaWebSocket: (messageObject: WebsocketIncomingMessageObject) => void;
 }
 
-const Container = styled.div``;
+const Container = styled.div`
+  display: inline-block;
+`;
+
+const FingerOnNoseButton = styled.button`
+  border: 0.6vw outset black;
+  background-color: #dddddd;
+  cursor: pointer;
+  width: 100%;
+  height: 5em;
+
+  &:active {
+    border-style: inset;
+  }
+`;
 
 export default function Playing({
   gameData,
   playerDetails,
   sendViaWebSocket,
 }: PlayingProps) {
-  const { id, shortId, gameState, players, yourSecrets, gameSettings } =
-    gameData;
+  const { id, shortId, gameState } = gameData;
 
   if (gameState.state !== "main") {
     return <Container>Something went wrong</Container>;
   }
 
-  const {} = gameState;
-  const playerMap = players.reduce((prev: { [key: string]: string }, curr) => {
-    prev[curr.id] = curr.name;
-    return prev;
-  }, {});
+  const { seatOrder, fingerOnNose } = gameState;
 
   return (
     <Container>
       <p>Game ID: {shortId}</p>
+      <PlayersDisplay seatOrder={seatOrder} fingerOnNose={fingerOnNose} />
+      <hr />
       <CardsInHand
-        cardWidth={10}
+        cardWidth={12}
         gameData={gameData}
         handleCardChoice={(cardId) => {
           sendViaWebSocket({
@@ -52,10 +64,23 @@ export default function Playing({
           });
         }}
       />
-      <h3>playerMap</h3>
-      <pre>{JSON.stringify(playerMap, null, "  ")}</pre>
-      <h3>Full Game Data</h3>
-      <pre>{JSON.stringify(gameData, null, "  ")}</pre>
+      <hr />
+      <FingerOnNoseButton
+        onClick={() => {
+          sendViaWebSocket({
+            type: "action",
+            playerId: playerDetails.playerId,
+            playerPassword: playerDetails.playerPassword,
+            gameId: id,
+            action: {
+              type: "finger-on-nose",
+              playerId: playerDetails.playerId,
+            },
+          });
+        }}
+      >
+        Put Finger on Nose 🤫
+      </FingerOnNoseButton>
     </Container>
   );
 }

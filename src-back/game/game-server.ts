@@ -197,7 +197,7 @@ export const checkStats = async () => {
   return allStats;
 };
 
-export const startGame = async (gameId: string) => {
+export const sendStartGameAction = async (gameId: string) => {
   try {
     const serverStats = await checkStats();
 
