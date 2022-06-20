@@ -1,4 +1,6 @@
 const { htmlPlugin } = require("@craftamap/esbuild-plugin-html");
+const htmlTemplate = require("./html-template");
+
 require("esbuild")
   .build({
     entryPoints: ["src-front/index.tsx"],
@@ -18,17 +20,8 @@ require("esbuild")
           {
             filename: "index.html",
             entryPoints: ["src-front/index.tsx"],
-            title: "Pig Dice Game",
-            htmlTemplate: `<!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-        </head>
-        <body>
-        <div id="root"></div>
-        </body>
-      </html>`,
+            title: "Pig Card Game",
+            htmlTemplate,
           },
         ],
       }),
